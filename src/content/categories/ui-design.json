@@ -1,0 +1,10 @@
+{
+  "id": "ui-design",
+  "name": "UI/UX & Branding",
+  "nameHe": "עיצוב ממשק",
+  "description": "App interfaces, website designs, brand identity, and UI mockups.",
+  "descriptionHe": "ממשקי אפליקציה, עיצוב אתרים, זהות מותג, ו-mockups.",
+  "icon": "layout",
+  "color": "#ff6b00",
+  "order": 13
+}

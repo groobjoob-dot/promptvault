@@ -1,0 +1,10 @@
+{
+  "id": "3d",
+  "name": "3D & Stylized",
+  "nameHe": "תלת-ממד ומעוצב",
+  "description": "3D renders, Pixar-style characters, clay textures, and stylized avatars.",
+  "descriptionHe": "רינדורים תלת-ממדיים, דמויות בסגנון Pixar, מרקמי חימר, ואווטרים מעוצבים.",
+  "icon": "cube",
+  "color": "#ff6b00",
+  "order": 3
+}

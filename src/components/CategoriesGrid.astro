@@ -1,0 +1,87 @@
+---
+import { getCollection } from 'astro:content';
+
+const categories = await getCollection('categories');
+const sorted = categories.sort((a, b) => a.data.order - b.data.order);
+---
+
+<section id="categories" class="py-12 sm:py-16 border-b border-vault-border">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-8">
+      <div class="flex items-center justify-center gap-2 mb-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-vault-orange"></span>
+        <span class="text-xs label-caps text-vault-orange">Browse</span>
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-vault-text">{sorted.length} Categories</h2>
+      <p class="text-sm text-vault-muted mt-2">Find prompts for every kind of creation</p>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+      {sorted.map((cat) => (
+        <a
+          href={`/category/${cat.data.id}`}
+          class="cat-tile group"
+        >
+          <div class="cat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M9 9h6v6H9z"/>
+            </svg>
+          </div>
+          <h3 class="cat-name">{cat.data.name}</h3>
+          <p class="cat-desc">{cat.data.description}</p>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .cat-tile {
+    background: var(--color-vault-surface);
+    border: 1px solid var(--color-vault-border);
+    border-radius: 4px;
+    padding: 16px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: block;
+  }
+  .cat-tile:hover {
+    border-color: rgba(255, 107, 0, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.4);
+  }
+  .cat-icon {
+    width: 38px;
+    height: 38px;
+    background: rgba(255, 107, 0, 0.1);
+    border: 1px solid rgba(255, 107, 0, 0.3);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-vault-orange);
+    margin-bottom: 12px;
+    transition: all 0.25s;
+  }
+  .cat-tile:hover .cat-icon {
+    background: var(--color-vault-orange);
+    color: var(--color-vault-deep);
+  }
+  .cat-name {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-vault-text);
+    margin-bottom: 4px;
+  }
+  .cat-desc {
+    font-size: 11px;
+    color: var(--color-vault-muted);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

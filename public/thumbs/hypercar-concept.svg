@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#g)"/>
+  <path d="M 80 250 L 100 230 L 200 230 L 220 220 L 280 220 L 300 230 L 320 250 L 320 280 L 80 280 Z" fill="#0c1e4a" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="120" y="250" width="40" height="15" fill="#000" stroke="#3b82f6" stroke-width="1"/>
+  <rect x="240" y="250" width="40" height="15" fill="#000" stroke="#3b82f6" stroke-width="1"/>
+  <circle cx="140" cy="290" r="22" fill="#1a1a1a" stroke="#3b82f6" stroke-width="2"/>
+  <circle cx="260" cy="290" r="22" fill="#1a1a1a" stroke="#3b82f6" stroke-width="2"/>
+  <line x1="200" y1="280" x2="200" y2="320" stroke="#ff6b00" stroke-width="2"/>
+  <text x="200" y="380" text-anchor="middle" fill="#a3a3a3" font-family="monospace" font-size="12">HYPERCAR</text>
+</svg>

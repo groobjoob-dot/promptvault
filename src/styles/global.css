@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+  --color-vault-bg: #0a0a0a;
+  --color-vault-surface: #181818;
+  --color-vault-border: #262626;
+  --color-vault-text: #f5f5f5;
+  --color-vault-muted: #a3a3a3;
+  --color-vault-orange: #ff6b00;
+  --color-vault-orange-hover: #ff8c33;
+  --color-vault-deep: #141414;
+
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, monospace;
+}
+
+@utility label-caps {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+@layer base {
+  html {
+    background: var(--color-vault-bg);
+    color: var(--color-vault-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background: var(--color-vault-bg);
+    min-height: 100vh;
+  }
+  ::selection {
+    background: var(--color-vault-orange);
+    color: var(--color-vault-deep);
+  }
+}
+
+@layer components {
+  .prompt-card {
+    @apply relative bg-vault-surface border border-vault-border overflow-hidden rounded-sm transition-all duration-300;
+  }
+  .prompt-card:hover {
+    @apply border-vault-orange/60 shadow-lg shadow-vault-orange/5;
+    transform: translateY(-2px);
+  }
+  .copy-btn {
+    @apply absolute right-1 top-1 bottom-1 bg-vault-orange hover:bg-white text-vault-deep px-4 rounded-sm label-caps text-[11px] font-extrabold transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer active:scale-95 shadow-md;
+  }
+  .fav-btn {
+    @apply bg-black/70 hover:bg-vault-orange hover:text-vault-deep text-white w-6 h-6 flex items-center justify-center rounded-full backdrop-blur-md border border-white/20 transition-all;
+  }
+  .filter-chip {
+    @apply px-3 py-1.5 rounded-sm text-xs font-bold border border-vault-border hover:border-vault-orange hover:text-vault-orange transition-all cursor-pointer;
+  }
+  .filter-chip.active {
+    @apply border-vault-orange text-vault-orange bg-vault-orange/10;
+  }
+  .copy-banner {
+    @apply fixed bottom-4 left-1/2 -translate-x-1/2 bg-vault-orange text-vault-deep px-6 py-3 rounded-sm label-caps text-sm font-extrabold shadow-2xl z-50 transition-all;
+  }
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/80 backdrop-blur-sm z-40 flex items-center justify-center p-4;
+  }
+  .modal-content {
+    @apply bg-vault-surface border-2 border-vault-orange rounded-md max-w-md w-full p-6 shadow-2xl;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-vault-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-vault-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-vault-orange);
+}

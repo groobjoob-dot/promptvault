@@ -1,0 +1,10 @@
+{
+  "id": "animals",
+  "name": "Animals & Pets",
+  "nameHe": "בעלי חיים",
+  "description": "Wildlife, pet portraits, and creative animal photography.",
+  "descriptionHe": "חיות בר, דיוקנאות חיות מחמד, וצילום יצירתי של בעלי חיים.",
+  "icon": "paw",
+  "color": "#ff6b00",
+  "order": 10
+}

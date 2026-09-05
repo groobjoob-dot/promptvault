@@ -1,0 +1,10 @@
+{
+  "id": "cinematic",
+  "name": "Cinematic",
+  "nameHe": "קולנועי",
+  "description": "Movie-quality cinematic shots with dramatic lighting, motion blur, and atmosphere.",
+  "descriptionHe": "צילומים קולנועיים באיכות סרט - תאורה דרמטית, טשטוש תנועה ואווירה.",
+  "icon": "film",
+  "color": "#ff6b00",
+  "order": 2
+}

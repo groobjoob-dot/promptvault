@@ -1,0 +1,27 @@
+---
+import { getCollection } from 'astro:content';
+import PromptCard from './PromptCard.astro';
+
+const allPrompts = await getCollection('prompts');
+const sorted = allPrompts.sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime());
+const recent = sorted.slice(0, 18);
+---
+
+<section id="latest" class="py-12 sm:py-16 border-b border-vault-border">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-end justify-between mb-6">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-vault-orange"></span>
+          <span class="text-xs label-caps text-vault-orange">Latest</span>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-vault-text">Fresh Drops</h2>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+      {recent.map((prompt) => (
+        <PromptCard prompt={prompt} locale="en" />
+      ))}
+    </div>
+  </div>
+</section>

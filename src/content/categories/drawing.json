@@ -1,0 +1,10 @@
+{
+  "id": "drawing",
+  "name": "Drawing & Sketch",
+  "nameHe": "רישום וסקיצה",
+  "description": "Pencil sketches, charcoal drawings, and hand-drawn aesthetics.",
+  "descriptionHe": "סקיצות עיפרון, רישומי פחם, ואסתטיקה של רישום יד.",
+  "icon": "pencil",
+  "color": "#ff6b00",
+  "order": 11
+}

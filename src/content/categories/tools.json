@@ -1,0 +1,10 @@
+{
+  "id": "tools",
+  "name": "Developer Tools",
+  "nameHe": "כלי מפתחים",
+  "description": "Code generation, debugging, and developer productivity prompts.",
+  "descriptionHe": "יצירת קוד, דיבוג, ופרומפטים לפרודוקטיביות מפתחים.",
+  "icon": "code",
+  "color": "#ff6b00",
+  "order": 15
+}

@@ -1,0 +1,10 @@
+{
+  "id": "nature",
+  "name": "Nature & Landscape",
+  "nameHe": "טבע ונוף",
+  "description": "Breathtaking landscapes, sunsets, mountains, and natural scenery.",
+  "descriptionHe": "נופים מעוררי השראה, שקיעות, הרים, ונופים טבעיים.",
+  "icon": "mountain",
+  "color": "#ff6b00",
+  "order": 12
+}

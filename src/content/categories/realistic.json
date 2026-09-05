@@ -1,0 +1,10 @@
+{
+  "id": "realistic",
+  "name": "Realistic",
+  "nameHe": "ריאליסטי",
+  "description": "Photo-realistic prompts that look indistinguishable from real photographs.",
+  "descriptionHe": "פרומפטים פוטו-ריאליסטיים שנראים בלתי ניתנים להבחנה מצילום אמיתי.",
+  "icon": "camera",
+  "color": "#ff6b00",
+  "order": 4
+}

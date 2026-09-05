@@ -1,0 +1,10 @@
+{
+  "id": "portraits",
+  "name": "Portraits",
+  "nameHe": "דיוקנאות",
+  "description": "Stunning portrait photography prompts for editorial, cinematic, and stylized looks.",
+  "descriptionHe": "פרומפטים לצילום דיוקן מדהים - עריכתי, קולנועי, ומעוצב.",
+  "icon": "user",
+  "color": "#ff6b00",
+  "order": 1
+}

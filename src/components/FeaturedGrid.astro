@@ -1,0 +1,40 @@
+---
+import { getCollection } from 'astro:content';
+import PromptCard from './PromptCard.astro';
+
+interface Props {
+  locale?: 'en' | 'he';
+}
+
+const { locale = 'en' } = Astro.props;
+
+const allPrompts = await getCollection('prompts');
+const featured = allPrompts.filter(p => p.data.featured);
+const sorted = featured.sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime());
+---
+
+<section id="featured" class="py-12 sm:py-16 border-b border-vault-border">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-end justify-between mb-6">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-vault-orange"></span>
+          <span class="text-xs label-caps text-vault-orange">Featured</span>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-vault-text">This Week's Best</h2>
+      </div>
+      <a
+        href="/all"
+        class="hidden sm:inline-flex text-xs label-caps text-vault-muted hover:text-vault-orange transition-colors"
+      >
+        View all →
+      </a>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+      {sorted.slice(0, 12).map((prompt) => (
+        <PromptCard prompt={prompt} locale={locale} />
+      ))}
+    </div>
+  </div>
+</section>

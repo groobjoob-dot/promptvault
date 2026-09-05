@@ -1,0 +1,103 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import PromptCard from '../../components/PromptCard.astro';
+
+export async function getStaticPaths() {
+  const categories = await getCollection('categories');
+  return categories.map((cat) => ({
+    params: { id: cat.data.id },
+    props: { category: cat },
+  }));
+}
+
+const { category } = Astro.props;
+const allPrompts = await getCollection('prompts');
+const prompts = allPrompts
+  .filter((p) => p.data.category === category.data.id)
+  .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime());
+---
+
+<Layout
+  title={`${category.data.name} Prompts — PromptVault`}
+  description={category.data.description}
+  lang="en"
+>
+  <Header locale="en" />
+  <main class="min-h-screen">
+    <section class="py-10 sm:py-14 border-b border-vault-border bg-vault-surface/30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <a href="/" class="text-xs label-caps text-vault-muted hover:text-vault-orange mb-4 inline-block">
+          ← All Categories
+        </a>
+        <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-vault-text mb-2">
+          {category.data.name}
+        </h1>
+        <p class="text-vault-muted max-w-2xl text-sm">{category.data.description}</p>
+        <p class="text-xs label-caps text-vault-orange mt-3">
+          {prompts.length} {prompts.length === 1 ? 'prompt' : 'prompts'}
+        </p>
+      </div>
+    </section>
+
+    <section class="py-10 sm:py-14">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {prompts.length > 0 ? (
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+            {prompts.map((prompt) => (
+              <PromptCard prompt={prompt} locale="en" />
+            ))}
+          </div>
+        ) : (
+          <div class="text-center py-20">
+            <p class="text-vault-muted">No prompts in this category yet.</p>
+            <p class="text-xs label-caps text-vault-orange mt-2">Check back soon!</p>
+          </div>
+        )}
+      </div>
+    </section>
+  </main>
+  <Footer locale="en" />
+</Layout>
+
+<script>
+  document.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+    const card = target.closest('.prompt-card') as HTMLElement | null;
+    if (!card) return;
+
+    if (target.closest('.fav-btn')) {
+      e.preventDefault();
+      e.stopPropagation();
+      const fav = target.closest('.fav-btn') as HTMLElement;
+      const id = card.dataset.promptTitle;
+      const favs = new Set(JSON.parse(localStorage.getItem('vault-favs') || '[]'));
+      if (favs.has(id)) {
+        favs.delete(id);
+        fav.classList.remove('active');
+      } else {
+        favs.add(id);
+        fav.classList.add('active');
+      }
+      localStorage.setItem('vault-favs', JSON.stringify([...favs]));
+      return;
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+    const promptText = card.dataset.promptContent;
+    if (!promptText) return;
+    try {
+      await navigator.clipboard.writeText(promptText);
+      const banner = document.createElement('div');
+      banner.className = 'copy-banner';
+      banner.textContent = 'Copied!';
+      document.body.appendChild(banner);
+      setTimeout(() => banner.remove(), 1800);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  });
+</script>

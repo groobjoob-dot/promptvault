@@ -1,0 +1,84 @@
+---
+import { getCollection } from 'astro:content';
+
+interface Props {
+  totalPrompts?: number;
+}
+
+const { totalPrompts = 0 } = Astro.props;
+
+const categories = await getCollection('categories');
+const sortedCats = categories.sort((a, b) => a.data.order - b.data.order);
+---
+
+<section class="relative overflow-hidden border-b border-vault-border">
+  <div class="absolute inset-0 opacity-30 pointer-events-none">
+    <div class="absolute top-0 right-0 w-96 h-96 bg-vault-orange/20 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 w-96 h-96 bg-vault-orange/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-vault-surface border border-vault-orange/40 rounded-sm mb-6">
+        <span class="w-2 h-2 rounded-full bg-vault-orange animate-pulse"></span>
+        <span class="text-xs label-caps text-vault-orange">Free AI Prompt Library</span>
+      </div>
+
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-vault-text leading-[1.05] mb-5">
+        The vault of premium <span class="text-vault-orange">AI prompts</span>
+      </h1>
+
+      <p class="text-base text-vault-muted max-w-2xl mx-auto mb-6">
+        Tested, ready to copy, and free. For ChatGPT, Gemini, Midjourney, Sora, and more.
+      </p>
+
+      <div class="flex flex-wrap items-center justify-center gap-2 text-xs text-vault-muted">
+        <span class="px-2 py-1 bg-vault-surface border border-vault-border rounded-sm label-caps">
+          {totalPrompts}+ prompts
+        </span>
+        <span class="px-2 py-1 bg-vault-surface border border-vault-border rounded-sm label-caps">
+          {categories.length} categories
+        </span>
+        <span class="px-2 py-1 bg-vault-surface border border-vault-border rounded-sm label-caps">
+          100% free
+        </span>
+      </div>
+    </div>
+
+    <!-- Category Pills -->
+    <div class="flex flex-wrap items-center justify-center gap-2 max-w-5xl mx-auto">
+      {sortedCats.map((cat) => (
+        <a
+          href={`/category/${cat.data.id}`}
+          class="category-pill"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-vault-orange mr-1.5"></span>
+          {cat.data.name}
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .category-pill {
+    padding: 6px 14px;
+    background: var(--color-vault-surface);
+    border: 1px solid var(--color-vault-border);
+    border-radius: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-vault-muted);
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .category-pill:hover {
+    border-color: var(--color-vault-orange);
+    color: var(--color-vault-orange);
+    background: rgba(255, 107, 0, 0.05);
+  }
+</style>

@@ -1,0 +1,15 @@
+name = "promptvault"
+compatibility_date = "2026-08-19"
+account_id = "63783f4004608de5b9894c6e36af52b3"
+
+pages_build_output_dir = "./dist"
+
+# R2 bucket binding for images
+[[r2_buckets]]
+binding = "PROMPTS"
+bucket_name = "promptvault-images"
+preview_bucket_name = "promptvault-images-preview"
+
+# Environment variables
+[vars]
+SITE_URL = "https://promptvault.dev"

@@ -1,0 +1,47 @@
+---
+interface Props {
+  locale?: 'en' | 'he';
+}
+
+const { locale = 'en' } = Astro.props;
+
+const isHebrew = locale === 'he';
+const content = isHebrew ? {
+  title: 'הישאר מעודכן',
+  subtitle: 'קבל פרומפטים חדשים ועדכונים ישירות למייל',
+  placeholder: 'המייל שלך',
+  cta: 'הרשם',
+  fine: 'ללא ספאם. ניתן להסיר בכל עת.',
+} : {
+  title: 'Stay in the loop',
+  subtitle: 'Get new prompts and updates directly to your inbox',
+  placeholder: 'Your email',
+  cta: 'Subscribe',
+  fine: 'No spam. Unsubscribe anytime.',
+};
+---
+
+<section id="newsletter" class="py-16 sm:py-20 border-b border-vault-border bg-vault-surface/30">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 text-center">
+    <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-vault-text mb-3">
+      {content.title}
+    </h2>
+    <p class="text-sm text-vault-muted mb-8">{content.subtitle}</p>
+
+    <form class="flex flex-col sm:flex-row gap-2 max-w-md mx-auto" onsubmit="event.preventDefault(); alert('Thanks! We will be in touch.');">
+      <input
+        type="email"
+        required
+        placeholder={content.placeholder}
+        class="flex-1 bg-vault-deep border border-vault-border focus:border-vault-orange outline-none rounded-sm px-4 py-3 text-sm text-vault-text placeholder-vault-muted transition-colors"
+      />
+      <button
+        type="submit"
+        class="label-caps text-sm bg-vault-orange text-vault-deep hover:bg-white transition-all px-6 py-3 rounded-sm active:scale-95"
+      >
+        {content.cta}
+      </button>
+    </form>
+    <p class="text-[10px] text-vault-muted mt-3">{content.fine}</p>
+  </div>
+</section>

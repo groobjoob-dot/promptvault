@@ -1,0 +1,10 @@
+{
+  "id": "art",
+  "name": "Art & Illustration",
+  "nameHe": "אמנות ואיור",
+  "description": "Artistic illustrations, digital paintings, anime, and concept art.",
+  "descriptionHe": "איורים אמנותיים, ציורים דיגיטליים, אנימה ו-concept art.",
+  "icon": "palette",
+  "color": "#ff6b00",
+  "order": 5
+}

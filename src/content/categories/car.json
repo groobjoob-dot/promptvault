@@ -1,0 +1,10 @@
+{
+  "id": "car",
+  "name": "Cars & Vehicles",
+  "nameHe": "רכבים",
+  "description": "Hyperrealistic car renders, concept vehicles, and automotive art.",
+  "descriptionHe": "רינדורים היפר-ריאליסטיים של רכבים, קונספט רכבים, ואמנות רכב.",
+  "icon": "car",
+  "color": "#ff6b00",
+  "order": 9
+}

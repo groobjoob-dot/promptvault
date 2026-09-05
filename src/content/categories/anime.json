@@ -1,0 +1,10 @@
+{
+  "id": "anime",
+  "name": "Anime",
+  "nameHe": "אנימה",
+  "description": "Anime-style characters, manga art, and Japanese-inspired illustrations.",
+  "descriptionHe": "דמויות בסגנון אנימה, אמנות מנגה, ואיורים בהשראה יפנית.",
+  "icon": "ghost",
+  "color": "#ff6b00",
+  "order": 8
+}

@@ -1,0 +1,76 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import FeaturedGrid from '../components/FeaturedGrid.astro';
+import CategoriesGrid from '../components/CategoriesGrid.astro';
+import Newsletter from '../components/Newsletter.astro';
+import Footer from '../components/Footer.astro';
+import LatestGrid from '../components/LatestGrid.astro';
+
+const allPrompts = await getCollection('prompts');
+const totalPrompts = allPrompts.length;
+---
+
+<Layout lang="en">
+  <Header locale="en" />
+  <main>
+    <Hero totalPrompts={totalPrompts} />
+    <FeaturedGrid locale="en" />
+    <LatestGrid />
+    <CategoriesGrid locale="en" />
+    <Newsletter locale="en" />
+  </main>
+  <Footer locale="en" />
+</Layout>
+
+<script>
+  // Copy functionality - reads prompt text from card's data attribute
+  document.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+    const card = target.closest('.prompt-card') as HTMLElement | null;
+    if (!card) return;
+
+    // If clicked on the copy overlay OR on the bookmark button, do nothing
+    if (target.closest('.fav-btn')) {
+      e.preventDefault();
+      e.stopPropagation();
+      const fav = target.closest('.fav-btn') as HTMLElement;
+      const id = card.dataset.promptTitle;
+      const favs = new Set(JSON.parse(localStorage.getItem('vault-favs') || '[]'));
+      if (favs.has(id)) {
+        favs.delete(id);
+        fav.classList.remove('active');
+      } else {
+        favs.add(id);
+        fav.classList.add('active');
+      }
+      localStorage.setItem('vault-favs', JSON.stringify([...favs]));
+      return;
+    }
+
+    // Otherwise, copy (whether clicking card body or the copy button)
+    e.preventDefault();
+    e.stopPropagation();
+
+    const promptText = card.dataset.promptContent;
+    if (!promptText) return;
+
+    try {
+      await navigator.clipboard.writeText(promptText);
+      showCopyBanner('Copied!');
+    } catch (err) {
+      console.error('Copy failed:', err);
+      showCopyBanner('Failed');
+    }
+  });
+
+  function showCopyBanner(msg: string) {
+    const banner = document.createElement('div');
+    banner.className = 'copy-banner';
+    banner.textContent = msg;
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 1800);
+  }
+</script>

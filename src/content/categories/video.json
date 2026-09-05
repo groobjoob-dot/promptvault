@@ -1,0 +1,10 @@
+{
+  "id": "video",
+  "name": "Video",
+  "nameHe": "וידאו",
+  "description": "Video generation prompts for Sora, Veo 3, Kling, and other video AI tools.",
+  "descriptionHe": "פרומפטים ליצירת וידאו ל-Sora, Veo 3, Kling וכלי AI נוספים.",
+  "icon": "video",
+  "color": "#ff6b00",
+  "order": 6
+}

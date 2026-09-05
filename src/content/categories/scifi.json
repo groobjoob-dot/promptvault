@@ -1,0 +1,10 @@
+{
+  "id": "scifi",
+  "name": "Sci-Fi & Fantasy",
+  "nameHe": "מדע בדיוני ופנטזיה",
+  "description": "Futuristic scenes, mythical creatures, magical worlds, and otherworldly art.",
+  "descriptionHe": "סצנות עתידניות, יצורים מיתולוגיים, עולמות קסומים, ואמנות חוץ-גופית.",
+  "icon": "rocket",
+  "color": "#ff6b00",
+  "order": 14
+}

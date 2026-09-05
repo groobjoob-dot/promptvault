@@ -1,0 +1,10 @@
+{
+  "id": "products",
+  "name": "Products",
+  "nameHe": "מוצרים",
+  "description": "Product photography, e-commerce shots, and commercial visuals.",
+  "descriptionHe": "צילומי מוצרים, תמונות מסחר אלקטרוני, וויזואלים מסחריים.",
+  "icon": "box",
+  "color": "#ff6b00",
+  "order": 7
+}

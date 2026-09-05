@@ -1,0 +1,109 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const prompts = await getCollection('prompts');
+  return prompts.map((prompt) => ({
+    params: { id: prompt.id },
+    props: { prompt },
+  }));
+}
+
+const { prompt } = Astro.props;
+const { Content } = await render(prompt);
+
+const isHebrew = false;
+const title = prompt.data.title;
+const description = `Premium AI prompt: ${title}. Compatible with ${prompt.data.compatible.join(', ')}.`;
+---
+
+<Layout title={`${title} — PromptVault`} description={description} lang="en">
+  <main class="min-h-screen">
+    <header class="border-b border-vault-border bg-vault-surface/30">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <a href="/" class="text-xs label-caps text-vault-muted hover:text-vault-orange">← Back to all prompts</a>
+      </div>
+    </header>
+
+    <article class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+      <div class="mb-6 flex items-center gap-2 text-xs">
+        <a href={`/category/${prompt.data.category}`} class="label-caps px-2 py-1 bg-vault-orange/10 text-vault-orange border border-vault-orange/30 rounded-sm hover:bg-vault-orange hover:text-vault-deep transition-all">
+          {prompt.data.category}
+        </a>
+        <span class="text-vault-muted">•</span>
+        <span class="text-vault-muted label-caps">{prompt.data.difficulty}</span>
+        <span class="text-vault-muted">•</span>
+        <span class="text-vault-muted">{prompt.data.publishedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+      </div>
+
+      <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-vault-text leading-tight mb-8">
+        {title}
+      </h1>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 prose prose-invert max-w-none">
+          <Content />
+        </div>
+
+        <aside class="space-y-4">
+          <div class="bg-vault-surface border border-vault-border rounded-sm p-4 sticky top-20">
+            <h3 class="label-caps text-xs text-vault-orange mb-3">Compatible With</h3>
+            <div class="flex flex-wrap gap-2 mb-4">
+              {prompt.data.compatible.map((tool: string) => (
+                <span class="text-xs label-caps px-2 py-1 bg-vault-deep border border-vault-border rounded-sm">
+                  {tool}
+                </span>
+              ))}
+            </div>
+
+            <h3 class="label-caps text-xs text-vault-orange mb-3 mt-4">Tags</h3>
+            <div class="flex flex-wrap gap-1.5">
+              {prompt.data.tags.map((tag: string) => (
+                <span class="text-[10px] label-caps px-1.5 py-0.5 bg-vault-deep border border-vault-border rounded-sm text-vault-muted">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+
+            <button
+              class="copy-page-btn w-full mt-6 label-caps text-sm bg-vault-orange text-vault-deep hover:bg-white transition-all px-4 py-3 rounded-sm active:scale-95"
+              data-prompt-content={prompt.body}
+            >
+              <span class="inline-flex items-center gap-2 justify-center">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Copy Full Prompt
+              </span>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </article>
+  </main>
+
+  <script>
+    document.querySelector('.copy-page-btn')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget as HTMLButtonElement;
+      const content = btn.dataset.promptContent;
+      if (!content) return;
+
+      // Extract the code block (the actual prompt)
+      const codeMatch = content.match(/```\n([\s\S]*?)\n```/);
+      const promptText = codeMatch ? codeMatch[1] : content;
+
+      try {
+        await navigator.clipboard.writeText(promptText);
+        const banner = document.createElement('div');
+        banner.className = 'copy-banner';
+        banner.textContent = 'Prompt copied to clipboard!';
+        document.body.appendChild(banner);
+        setTimeout(() => banner.remove(), 2000);
+      } catch (err) {
+        console.error('Copy failed:', err);
+      }
+    });
+  </script>
+</Layout>
