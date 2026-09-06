@@ -1,127 +1,105 @@
 // Cloudflare Pages Function: /api/telegram-webhook
-// Receives Telegram channel posts and creates new prompt files
+// Receives Telegram channel posts and triggers site rebuild
+//
+// Flow:
+// 1. Telegram → POST to this endpoint
+// 2. Parse caption (Title/Category/AI Tool/etc.)
+// 3. Download attached images
+// 4. Upload images to R2
+// 5. Save prompt.md to git repo (via GitHub API)
+// 6. Cloudflare deploy hook auto-rebuilds site
 
 interface Env {
-  PROMPTS: R2Bucket;
   TELEGRAM_BOT_TOKEN: string;
-  DEPLOY_HOOK_URL: string;
-  GITHUB_TOKEN?: string;
-  GITHUB_REPO?: string; // e.g. "yurinzon/promptvault"
+  CLOUDFLARE_R2_ACCESS_KEY_ID: string;
+  CLOUDFLARE_R2_SECRET_ACCESS_KEY: string;
+  CLOUDFLARE_ACCOUNT_ID: string;
+  GITHUB_TOKEN: string;
+  CLOUDFLARE_DEPLOY_HOOK: string;
 }
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     const update = await context.request.json() as any;
-
-    // Look for channel_post (post in channel) or edited_channel_post
     const post = update.channel_post || update.edited_channel_post;
+
     if (!post) {
-      return new Response(JSON.stringify({ ok: true, message: 'No channel post' }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ ok: true, message: 'No channel post' });
     }
 
-    // Must have photos and caption
     if (!post.photo || !post.caption) {
-      return new Response(JSON.stringify({ ok: true, message: 'No photo or caption' }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ ok: true, message: 'No photo or caption' });
     }
 
-    // Parse caption
     const meta = parseCaption(post.caption);
     if (!meta.title) {
-      return new Response(JSON.stringify({ ok: false, error: 'Missing title' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ ok: false, error: 'Missing title' }, 400);
     }
 
-    // Generate slug
     const slug = slugify(meta.title);
     const promptId = `${slug}-${post.message_id}`;
+    const today = new Date(post.date * 1000).toISOString().split('T')[0];
 
-    // Download up to 4 images (last 4 are highest quality)
-    const photos = post.photo.slice(-4);
-    const imageKeys: string[] = [];
-    for (let i = 0; i < photos.length; i++) {
-      const photo = photos[i];
-      const fileId = photo.file_id;
-      const ext = 'webp';
-      const r2Key = `prompts/${promptId}/${i}.${ext}`;
+    // Step 1: Download and upload ONLY the highest-quality image to R2
+    const photoUrls = await uploadImages(
+      post.photo,
+      promptId,
+      context.env
+    );
 
-      // Get file info from Telegram
-      const fileInfo = await getTelegramFile(context.env.TELEGRAM_BOT_TOKEN, fileId);
-      if (!fileInfo) continue;
-
-      // Download file
-      const fileBuffer = await downloadTelegramFile(context.env.TELEGRAM_BOT_TOKEN, fileInfo.file_path);
-      if (!fileBuffer) continue;
-
-      // Upload to R2
-      await context.env.PROMPTS.put(r2Key, fileBuffer, {
-        httpMetadata: { contentType: 'image/webp' },
-        customMetadata: { originalName: `${slug}-${i}` },
-      });
-      imageKeys.push(r2Key);
+    if (photoUrls.length === 0) {
+      return jsonResponse({ ok: false, error: 'No images uploaded' }, 500);
     }
 
-    if (imageKeys.length === 0) {
-      return new Response(JSON.stringify({ ok: false, error: 'Failed to upload any image' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    // Use only the first (best quality) image
+    const heroUrl = photoUrls[0];
 
-    // Build the markdown file
-    const heroImage = imageKeys[0];
-    const galleryImages = imageKeys.slice(1);
-
-    const md = buildPromptMarkdown({
+    // Step 2: Generate prompt.md content
+    const md = generatePromptMarkdown({
       title: meta.title,
       category: meta.category || 'cinematic',
       aiTool: meta.aiTool || 'gpt',
       description: meta.description || '',
       prompt: meta.prompt || '',
       tags: meta.tags || [],
-      slug: promptId,
-      heroImage,
-      galleryImages,
-      postDate: new Date(post.date * 1000).toISOString().split('T')[0],
+      heroUrl: heroUrl,
+      date: today,
     });
 
-    // Save markdown file to R2 (or commit to GitHub for Pages to pick up)
-    const mdKey = `content/prompts/${promptId}.md`;
-    await context.env.PROMPTS.put(mdKey, md, {
-      httpMetadata: { contentType: 'text/markdown' },
-    });
+    // Step 3: Save to GitHub (commits to repo)
+    await commitToGitHub(
+      `src/content/prompts/${promptId}.md`,
+      md,
+      `feat: add prompt "${meta.title}"`,
+      context.env
+    );
 
-    // Trigger Cloudflare Pages rebuild
-    if (context.env.DEPLOY_HOOK_URL) {
-      await triggerDeploy(context.env.DEPLOY_HOOK_URL);
-    }
+    // Step 4: Cloudflare deploy hook will auto-trigger via GitHub push
+    // (no need to call it manually)
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       ok: true,
       slug: promptId,
       title: meta.title,
-      imagesUploaded: imageKeys.length,
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      imagesUploaded: photoUrls.length,
+      note: 'Cloudflare Pages will auto-deploy from GitHub push',
     });
   } catch (err: any) {
     console.error('Webhook error:', err);
-    return new Response(JSON.stringify({ ok: false, error: err.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ ok: false, error: err.message }, 500);
   }
 };
 
-function parseCaption(caption: string) {
+// === Helper functions ===
+
+function jsonResponse(data: any, status = 200): Response {
+  return new Response(JSON.stringify(data, null, 2), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+function parseCaption(caption: string): any {
   const result: any = {};
   const lines = caption.split('\n');
   for (const line of lines) {
@@ -130,10 +108,12 @@ function parseCaption(caption: string) {
       const key = match[1].trim().toLowerCase();
       const value = match[2].trim();
       if (key === 'title') result.title = value;
-      else if (key === 'category' || key === 'cat') result.category = value;
-      else if (key === 'tool' || key === 'ai tool' || key === 'ai') result.aiTool = value;
-      else if (key === 'description' || key === 'desc') result.description = value;
-      else if (key === 'tags') result.tags = value.split(',').map(t => t.trim());
+      else if (['category', 'cat'].includes(key)) result.category = value.toLowerCase();
+      else if (['tool', 'ai tool', 'ai'].includes(key)) result.aiTool = value.toLowerCase();
+      else if (['description', 'desc'].includes(key)) result.description = value;
+      else if (key === 'tags') {
+        result.tags = value.split(',').map((t: string) => t.trim().toLowerCase()).filter(Boolean);
+      }
       else if (key === 'prompt') result.prompt = value;
     }
   }
@@ -149,77 +129,187 @@ function slugify(text: string): string {
     .trim();
 }
 
-async function getTelegramFile(botToken: string, fileId: string): Promise<{ file_path: string } | null> {
-  const res = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`);
+async function uploadImages(
+  photos: any[],
+  promptId: string,
+  env: Env
+): Promise<string[]> {
+  const urls: string[] = [];
+  const BUCKET = 'promptvault-images';
+
+  // Take ONLY the largest photo (highest quality, last in array)
+  const photo = photos[photos.length - 1];
+  if (!photo) return urls;
+
+  try {
+    // Get file path from Telegram
+    const fileInfo = await getTelegramFile(env.TELEGRAM_BOT_TOKEN, photo.file_id);
+    if (!fileInfo) return urls;
+
+    // Download file
+    const fileBuffer = await downloadTelegramFile(env.TELEGRAM_BOT_TOKEN, fileInfo.file_path);
+    if (!fileBuffer) return urls;
+
+    // Upload to R2
+    const ext = 'jpg'; // Telegram photos are JPEG
+    const r2Key = `prompts/${promptId}/hero.${ext}`;
+
+    const r2Url = await uploadToR2(fileBuffer, r2Key, env);
+    if (r2Url) {
+      urls.push(r2Url);
+    }
+  } catch (err) {
+    console.error(`Failed to upload photo:`, err);
+  }
+
+  return urls;
+}
+
+async function getTelegramFile(token: string, fileId: string): Promise<{ file_path: string } | null> {
+  const res = await fetch(
+    `https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`
+  );
   if (!res.ok) return null;
   const data = await res.json() as any;
   return data.ok ? data.result : null;
 }
 
-async function downloadTelegramFile(botToken: string, filePath: string): Promise<ArrayBuffer | null> {
-  const res = await fetch(`https://api.telegram.org/file/bot${botToken}/${filePath}`);
+async function downloadTelegramFile(token: string, filePath: string): Promise<ArrayBuffer | null> {
+  const res = await fetch(
+    `https://api.telegram.org/file/bot${token}/${filePath}`
+  );
   if (!res.ok) return null;
   return await res.arrayBuffer();
 }
 
-function buildPromptMarkdown(data: {
+async function uploadToR2(
+  buffer: ArrayBuffer,
+  key: string,
+  env: Env
+): Promise<string | null> {
+  const R2_BASE = `https://${env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+  const BUCKET = 'promptvault-images';
+  const url = `${R2_BASE}/${BUCKET}/${key}`;
+
+  // Use S3-compatible PUT
+  const date = new Date().toUTCString();
+  const contentType = 'image/jpeg';
+
+  // Use signed request via Cloudflare API (simplified for Pages)
+  // For production, use AWS S3 SDK with credentials
+  try {
+    // Use Cloudflare R2 S3 API
+    const aws = await import('aws4fetch'); // optional
+    // For now, use a simple PUT with public access
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': contentType,
+        // R2 public bucket - no auth needed
+      },
+      body: buffer,
+    });
+
+    if (res.ok) {
+      // Return public URL (R2.dev subdomain)
+      return `https://pub-${env.CLOUDFLARE_ACCOUNT_ID}.r2.dev/${BUCKET}/${key}`;
+    }
+  } catch (err) {
+    console.error('R2 upload error:', err);
+  }
+  return null;
+}
+
+function generatePromptMarkdown(data: {
   title: string;
   category: string;
   aiTool: string;
   description: string;
   prompt: string;
   tags: string[];
-  slug: string;
-  heroImage: string;
-  galleryImages: string[];
-  postDate: string;
+  heroUrl: string;
+  date: string;
 }): string {
-  const frontmatter = `---
+  return `---
 title: "${data.title.replace(/"/g, '\\"')}"
 titleHe: ""
-category: "${data.category.toLowerCase()}"
+category: "${data.category}"
 tags: ${JSON.stringify(data.tags)}
-image: "/cdn/${data.heroImage}"
-gallery: ${JSON.stringify(data.galleryImages.map(k => `/cdn/${k}`))}
-compatible: ["${data.aiTool.toLowerCase()}"]
+image: "${data.heroUrl}"
+gallery: []
+compatible: ["${data.aiTool}"]
 difficulty: "intermediate"
-publishedAt: ${data.postDate}
+publishedAt: ${data.date}
 featured: true
 ---
 
 # ${data.title}
 
-![${data.title}](/cdn/${data.heroImage})
+![${data.title}](${data.heroUrl})
 
-${data.description ? `## Description\n\n${data.description}\n` : ''}
+${data.description}
+
 ## Prompt
 
 \`\`\`
 ${data.prompt}
 \`\`\`
 
-${data.galleryImages.length > 0 ? `## Gallery
-
-${data.galleryImages.map((img, i) => `![${data.title} - variation ${i + 1}](/cdn/${img})`).join('\n')}
-` : ''}
-## Compatible With
-
-- **${data.aiTool}** and similar AI image generators
-
 ## How to Use
 
 1. Copy the prompt above
-2. Paste it into ${data.aiTool}
+2. Paste into ${data.aiTool.toUpperCase()}
 3. Adjust settings as needed
 4. Generate and enjoy!
 `;
-  return frontmatter;
 }
 
-async function triggerDeploy(hookUrl: string) {
+async function commitToGitHub(
+  filePath: string,
+  content: string,
+  message: string,
+  env: Env
+): Promise<boolean> {
   try {
-    await fetch(hookUrl, { method: 'POST' });
+    // Get current file SHA (if exists)
+    const getRes = await fetch(
+      `https://api.github.com/repos/groobjoob-dot/promptvault/contents/${filePath}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${env.GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github+json',
+        },
+      }
+    );
+
+    let sha: string | undefined;
+    if (getRes.ok) {
+      const file = await getRes.json() as any;
+      sha = file.sha;
+    }
+
+    // Create or update file
+    const putRes = await fetch(
+      `https://api.github.com/repos/groobjoob-dot/promptvault/contents/${filePath}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${env.GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          content: btoa(unescape(encodeURIComponent(content))),
+          sha,
+          branch: 'main',
+        }),
+      }
+    );
+
+    return putRes.ok;
   } catch (err) {
-    console.error('Deploy trigger failed:', err);
+    console.error('GitHub commit error:', err);
+    return false;
   }
 }

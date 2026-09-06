@@ -67,6 +67,7 @@ def upload_file(client, local_path: Path, r2_key: str) -> tuple[str, bool, str]:
             content_type = "application/octet-stream"
 
         size = local_path.stat().st_size
+        # S3 metadata only supports ASCII - use safe-name + original-name-safe
         with open(local_path, "rb") as f:
             client.upload_fileobj(
                 f,
@@ -75,7 +76,7 @@ def upload_file(client, local_path: Path, r2_key: str) -> tuple[str, bool, str]:
                 ExtraArgs={
                     "ContentType": content_type,
                     "Metadata": {
-                        "original-name": local_path.name,
+                        "original-name": local_path.name.encode('ascii', 'ignore').decode('ascii') or 'file',
                         "uploaded-at": datetime.now().isoformat(),
                     },
                 },
